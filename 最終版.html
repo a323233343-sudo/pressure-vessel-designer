@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<title>壓力容器胴身下胚料計算器</title>
+<style>
+*{box-sizing:border-box;color-scheme:light}html{color-scheme:light;background:#fff}body{margin:0;background:#ffffff !important;color:#263746 !important;font:15px system-ui,"Microsoft JhengHei",sans-serif}
+header{background:#ffffff !important;color:#263746 !important;padding:18px 24px;border-bottom:1px solid #dce5ec}h1{font-size:22px;margin:0}header p{margin:4px 0 0;color:#66798a;font-size:13px}
+main{max-width:1440px;margin:auto;padding:18px;display:grid;grid-template-columns:290px 1fr;gap:15px}
+.panel{background:#fff;border:1px solid #d7e1eb;border-radius:11px;padding:16px;min-width:0}h2{font-size:16px;margin:0 0 12px}
+.field{margin:12px 0}.field label{display:flex;justify-content:space-between;gap:8px;color:#65788b;font-size:13px;margin-bottom:5px}
+input,select{width:100%;padding:9px;border:1px solid #c7d4e1;border-radius:7px;font:inherit;color:#20364b;background:#fff;color-scheme:light}
+button{border:0;border-radius:7px;padding:10px 12px;background:#1769aa;color:white;font-weight:650;cursor:pointer}.secondary{background:#e8f0f7;color:#1d527f}
+.actions,.tabs{display:flex;gap:8px;flex-wrap:wrap}.workspace{display:grid;grid-template-columns:1fr;gap:15px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.metric{padding:11px;background:#f5f8fb;border:1px solid #d7e1eb;border-radius:8px;min-width:0}
+.metric small{display:block;color:#65788b;font-size:12px}.metric strong{font-size:17px;display:block;margin-top:3px;overflow-wrap:anywhere}
+.hero{background:#eaf4fb;border:1px solid #c7dfef;border-radius:10px;padding:14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hero strong{font-size:27px;color:#145b91}.hero span{color:#526b7e;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}td{padding:8px 5px;border-bottom:1px solid #d7e1eb}td:last-child{text-align:right;font-weight:600}
+.note{font-size:12px;color:#73551c;background:#fff8e8;border:1px solid #f0dfb8;border-radius:8px;padding:10px;margin-top:12px;line-height:1.55}
+.note.info{color:#355a76;background:#f1f7fb;border-color:#d4e4ef}
+.drawing{grid-column:1/-1}.drawing svg{width:100%;height:auto;display:block;background:#fbfdff;border:1px solid #e0e8ef;border-radius:8px;margin-top:12px}
+.tabs{margin-left:auto}.tabs button{padding:8px 11px}.tabs .active{background:#1769aa;color:#fff}
+@media(max-width:900px){main{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{header,aside,.tabs,.actions{display:none!important}main{display:block;padding:0}.panel{border:0;box-shadow:none}.drawing svg{border:0}}
+/* 工業深藍配色 */
+:root{--navy:#172b4d;--navy-2:#203b63;--steel:#3979b9;--steel-light:#e5edf5;--ink:#263746;--line:#cbd7e4;--surface:#ffffff;--canvas:#edf2f7}
+html{background:var(--canvas)}
+body{background:var(--canvas)!important;color:var(--ink)!important}
+header{background:var(--navy)!important;color:#fff!important;border-bottom:4px solid var(--steel);box-shadow:0 2px 8px rgba(16,35,60,.12)}
+header h1{color:#fff!important;letter-spacing:.5px}
+header p{color:#d6e4f0!important}
+.panel{background:var(--surface);border:1px solid var(--line);box-shadow:0 3px 12px rgba(23,43,77,.06)}
+h2{color:var(--navy)}
+.field label{color:#52677f}
+input,select{border-color:#bdcada;color:#20364b;background:#fff}
+input:focus,select:focus{outline:2px solid rgba(57,121,185,.22);border-color:var(--steel)}
+button{background:var(--steel);color:#fff;transition:background .15s ease,transform .15s ease}
+button:hover{background:var(--navy-2)}
+button:active{transform:translateY(1px)}
+.secondary{background:var(--steel-light);color:var(--navy-2)}
+.secondary:hover{background:#d2dfed;color:var(--navy)}
+.tabs .active{background:var(--navy);color:#fff}
+.metric{background:#f3f6fa;border-color:#d3deea}
+.metric small{color:#5b6f85}
+.metric strong{color:var(--navy)}
+.hero{background:#e5edf5;border-color:#bfd0e2}
+.hero strong{color:var(--navy)}
+.hero span{color:#526b84}
+td{border-bottom-color:#d8e1eb}
+.note{background:#f8f3e8;border-color:#e6d7b7;color:#70572c}
+.note.info{background:#edf3f9;border-color:#cbd9e8;color:#355574}
+.drawing svg{background:#f8fafc;border-color:#cbd7e4}
+@media print{header{background:#fff!important;color:#172b4d!important;border-bottom:1px solid #cbd7e4;box-shadow:none}header h1,header p{color:#172b4d!important}}
+</style>
+</head>
+<body>
+<header><h1>壓力容器設計器</h1><p>依工廠分節拼板：12 m 胴身分 2 節，每節圓周 1 片（360°）</p></header>
+<main>
+<aside class="panel">
+<h2>胴身基本尺寸</h2>
+<div class="field"><label>胴身總長度 L <span>mm</span></label><input id="L" type="number" min="1" step="1" value="12000"></div>
+<div class="field"><label>內徑 ID <span>mm</span></label><input id="ID" type="number" min="1" step="1" value="6000"></div>
+<div class="field"><label>板厚 t <span>mm</span></label><input id="t" type="number" min=".1" step=".1" value="30"></div>
+<div class="field"><label>材料密度 ρ <span>kg/m³</span></label><input id="rho" type="number" min="1" step="1" value="7850"></div>
+<hr style="border:0;border-top:1px solid #d7e1eb;margin:16px 0">
+<h2>端頭基本尺寸</h2>
+<div class="field"><label>端頭內徑 ID <span>mm</span></label><input id="headID" type="number" min="1" step="1" value="6000"></div>
+<div class="field"><label>端頭板厚 t <span>mm</span></label><input id="headT" type="number" min=".1" step=".1" value="30"></div>
+<div class="note info">胴身與端頭共用內徑及板厚。修改任一區的內徑或板厚，另一區會立即同步；計算結果亦會隨之更新。</div>
+<div class="field"><label>端頭型式 <span>選擇項目</span></label>
+<select id="headType">
+<option value="2:1 橢圓封頭">2:1 橢圓封頭</option>
+<option value="碟形封頭">碟形封頭</option>
+<option value="半球形封頭">半球形封頭</option>
+<option value="錐形封頭">錐形封頭</option>
+<option value="平封頭">平封頭</option>
+<option value="其他">其他</option>
+</select></div>
+<div class="field"><label>端頭整體展開參考直徑 <span>mm（參考值）</span></label><input id="headBlankD" type="number" min="0" step="0.1" value="7168.7"></div>
+<div class="field"><label>中央圓頂下胚圓板直徑 <span>mm</span></label><input id="crownBlankD" type="number" min="0" step="0.1" value="2650" placeholder="輸入中央圓頂下胚直徑"></div>
+<div class="field"><label>中央圓頂片數 <span>片／個端頭</span></label><input id="crownQtyPerHead" type="number" min="1" step="1" value="1"></div>
+<div class="field"><label>周圍瓜瓣片數 <span>片／個端頭</span></label><input id="petalQtyPerHead" type="number" min="0" step="1" value="12" placeholder="輸入每個端頭瓜瓣片數"></div>
+<div class="field"><label>單片瓜瓣下胚實際面積 <span>m²／片</span></label><input id="petalArea" type="number" min="0" step="0.001" value="2.206" placeholder="依瓜瓣展開圖輸入實際面積"></div>
+<div class="field"><label>端頭數量 <span>個</span></label><input id="headQty" type="number" min="1" step="1" value="2"></div>
+<hr style="border:0;border-top:1px solid #d7e1eb;margin:16px 0">
+<h2>浮頭下胚設定</h2>
+<div class="field"><label>成形內球面半徑 R <span>mm</span></label><input id="floatID" type="number" min="1" step="0.01" value="5427.00" readonly> </div>
+<div class="field"><label>浮頭板厚 t <span>mm</span></label><input id="floatT" type="number" min="0.1" step="0.1" value="30"></div>
+<div class="field"><label>浮頭數量 <span>個</span></label><input id="floatQty" type="number" min="1" step="1" value="1"></div>
+<div class="field"><label>每個浮頭分瓣數 <span>瓣／個</span></label><input id="floatPetalQty" type="number" min="1" step="1" value="1"></div>
+<div class="field"><label>單瓣實際展開下胚面積 <span>m²／瓣</span></label><input id="floatPetalArea" type="number" min="0" step="0.001" value="5.5154" placeholder="依核定展開圖輸入"></div>
+<div class="note info">浮頭成形內球面半徑：使用胴身內徑 ID（與端頭內徑相同的共用內徑）乘以 0.9045 計算，結果直接顯示於上方「成形內球面半徑 R」欄位。修改胴身或端頭內徑時，浮頭成形內球面半徑及下胚尺寸同步更新。2 瓣僅作概念拆分；單瓣實際展開面積須依 CAD／核定下料圖輸入，未輸入前不虛構重量。</div>
+
+<hr style="border:0;border-top:1px solid #d7e1eb;margin:16px 0">
+<h2>工廠分節與拼板設定</h2>
+<div class="field"><label>軸向分節數 <span>節</span></label><input id="courses" type="number" min="1" step="1" value="6"></div>
+<div class="field"><label>每節圓周分片數 <span>片／節</span></label><input id="segments" type="number" min="1" step="1" value="3"></div>
+<div class="field"><label>單片理論圓周展開寬度 <span>mm</span></label><input id="pieceTheoryW" type="number" min="1" step=".1" value="6427.4"></div>
+<div class="field"><label>圓周方向預留量 <span>mm／片</span></label><input id="circAllowance" type="number" min="0" step="1" value="50"></div>
+<div class="field"><label>軸向端面修切餘量 <span>mm／片總加量</span></label><input id="axialAllowance" type="number" min="0" step="1" value="20"></div>
+<div class="field"><label>加工／切割損耗率 <span>%（重量估算）</span></label><input id="lossRate" type="number" min="0" max="100" step="0.5" value="5"></div>
+<div class="actions"><button id="update">更新計算</button><button class="secondary" id="reset">重設預設值</button></div>
+<div class="note info">工廠拼板預設：內徑 ID = 6,000 mm；軸向 6 節、每節圓周 3 片；單片理論圓周展開寬度採工廠指定值 6,427.4 mm；另加圓周預留 50 mm；每片軸向端面修切總加量 20 mm。加工／切割損耗率預設 5%，可自行修改。幾何核對提醒會依 ID、板厚及分片數顯示理論弧長差異，但下料計算仍以此處指定的 6,427.4 mm 為準。</div>
+</aside>
+
+<section class="workspace">
+<div class="panel">
+<h2>胴身下胚料計算結果</h2>
+<div class="hero"><div><strong id="totalPieces">18 片</strong><br><span id="pieceArrangement">6 節 × 每節 3 片（每片 120°）</span></div><div><span>全胴身下胚總數</span><br><strong id="pieceSizeHero">30 × 6,020 × 6,427.4 mm</strong></div></div>
+<div class="cards">
+<div class="metric"><small>每節軸向長度</small><strong id="courseLength">6,000 mm</strong></div>
+<div class="metric"><small>單片理論成品尺寸</small><strong id="theorySpec">30 × 6,000 × 6,377.4 mm</strong></div>
+<div class="metric"><small>單片實務下胚尺寸</small><strong id="blankSpec">30 × 6,020 × 6,427.4 mm</strong></div>
+<div class="metric"><small>單片下胚面積</small><strong id="pieceArea">38.69 m²</strong></div>
+<div class="metric"><small>單片下胚重量估算</small><strong id="pieceMass">9,112.2 kg</strong></div>
+<div class="metric"><small>矩形下胚總重量</small><strong id="totalMass">18,224.4 kg</strong></div>
+<div class="metric"><small>加工損耗重量估算</small><strong id="lossMass">911.2 kg</strong></div>
+<div class="metric"><small>含損耗備料重量</small><strong id="grossMass">19,135.6 kg</strong></div>
+</div>
+<h2 style="margin-top:18px">計算依據</h2>
+<table>
+<tr><td>每節軸向成品長度</td><td id="formulaCourse">12,000 ÷ 2 = 6,000 mm</td></tr>
+<tr><td>單片軸向下料長度</td><td id="formulaAxial">6,000 + 20 = 6,020 mm</td></tr>
+<tr><td>單片圓周下料寬度</td><td id="formulaCirc">6,377.4 + 50 = 6,427.4 mm</td></tr>
+<tr><td>總片數</td><td id="formulaCount">2 節 × 1 片／節 = 2 片</td></tr>
+<tr><td>單片重量</td><td id="formulaPieceMass">6.020 × 6.4274 × 0.030 × 7,850 = 9,112.2 kg</td></tr>
+<tr><td>矩形下胚總重量</td><td id="formulaTotalMass">9,112.2 × 2 = 18,224.4 kg</td></tr>
+<tr><td>加工損耗重量</td><td id="formulaLossMass">18,224.4 × 5% = 911.2 kg</td></tr>
+<tr><td>含損耗備料重量</td><td id="formulaGrossMass">18,224.4 + 911.2 = 19,135.6 kg</td></tr>
+</table>
+<div class="note">矩形下胚重量以外形尺寸 × 板厚 × 材料密度估算。加工／切割損耗率為可調整的備料估算值，預設 5%；損耗重量＝矩形下胚總重量 × 損耗率，含損耗備料重量＝矩形下胚總重量＋損耗重量。實際損耗需依切割方式、修邊量及排版結果確認。</div>
+<div class="note" id="geometryCheck">尺寸核對提醒。</div>
+</div>
+
+<div class="panel">
+<h2>端頭拆分下胚料計算結果</h2>
+<div class="hero"><div><strong id="headTotalQty">待輸入拆分數量</strong><br><span id="headTypeResult">2:1 橢圓封頭</span></div><div><span>拆分部件重量小計</span><br><strong id="headKnownSubtotal">待輸入拆分尺寸</strong></div></div>
+
+<h2>一、中央圓頂下胚料</h2>
+<div class="cards">
+<div class="metric"><small>中央圓頂下胚規格</small><strong id="crownSpec">待輸入圓板直徑</strong></div>
+<div class="metric"><small>中央圓頂總片數</small><strong id="crownTotalQty">待輸入</strong></div>
+<div class="metric"><small>單片中央圓頂面積</small><strong id="crownPieceArea">待輸入</strong></div>
+<div class="metric"><small>單片中央圓頂重量</small><strong id="crownPieceMass">待輸入</strong></div>
+<div class="metric"><small>中央圓頂總重量</small><strong id="crownTotalMass">待輸入</strong></div>
+</div>
+<table>
+<tr><td>中央圓頂直徑</td><td id="crownFormulaD">請輸入下胚直徑</td></tr>
+<tr><td>中央圓頂總片數</td><td id="crownFormulaQty">每個端頭片數 × 端頭數量</td></tr>
+<tr><td>中央圓頂重量</td><td id="crownFormulaMass">圓板面積 × 板厚 × 材料密度 × 片數</td></tr>
+</table>
+
+<h2 style="margin-top:20px">二、周圍瓜瓣片下胚料</h2>
+<div class="cards">
+<div class="metric"><small>每個端頭瓜瓣片數</small><strong id="petalPerHead">待輸入</strong></div>
+<div class="metric"><small>周圍瓜瓣總片數</small><strong id="petalTotalQty">待輸入</strong></div>
+<div class="metric"><small>單片瓜瓣實際下胚面積</small><strong id="petalPieceArea">待輸入</strong></div>
+<div class="metric"><small>單片瓜瓣重量</small><strong id="petalPieceMass">待輸入</strong></div>
+<div class="metric"><small>周圍瓜瓣總重量</small><strong id="petalTotalMass">待輸入</strong></div>
+<div class="metric"><small>周圍瓜瓣總下胚面積</small><strong id="petalTotalArea">待輸入</strong></div>
+</div>
+<table>
+<tr><td>周圍瓜瓣總片數</td><td id="petalFormulaQty">每個端頭片數 × 端頭數量</td></tr>
+<tr><td>周圍瓜瓣總面積</td><td id="petalFormulaArea">單片實際面積 × 瓜瓣總片數</td></tr>
+<tr><td>周圍瓜瓣重量</td><td id="petalFormulaMass">總面積 × 板厚 × 材料密度</td></tr>
+</table>
+
+<h2 style="margin-top:20px">三、端頭拆分後總用料</h2>
+<div class="cards">
+<div class="metric"><small>端頭數量</small><strong id="headCountResult">2 個</strong></div>
+<div class="metric"><small>中央圓頂＋周圍瓜瓣重量小計</small><strong id="headSubtotalMass">待輸入</strong></div>
+<div class="metric"><small>加工／切割損耗重量</small><strong id="headLossMass">待輸入</strong></div>
+<div class="metric"><small>端頭含損耗備料重量</small><strong id="headGrossMass">待輸入</strong></div>
+</div>
+<table>
+<tr><td>端頭型式</td><td id="headFormulaType">2:1 橢圓封頭</td></tr>
+<tr><td>端頭內徑／板厚</td><td id="headFormulaCommon">ID 6,000 mm／t 30 mm</td></tr>
+<tr><td>整體展開參考直徑（不直接計重）</td><td id="headFormulaRefD">7,168.7 mm</td></tr>
+<tr><td>拆分部件重量小計</td><td id="headFormulaSubtotal">待輸入</td></tr>
+<tr><td>加工損耗重量</td><td id="headFormulaLoss">小計 × 損耗率</td></tr>
+<tr><td>含損耗備料重量</td><td id="headFormulaGross">小計 + 損耗重量</td></tr>
+</table>
+<div class="note">拆分計算方式：中央圓頂以輸入的圓形下胚直徑計算面積；周圍瓜瓣以每片瓜瓣的「實際展開面積」計算，不以矩形外框面積代替。請依 CAD 展開圖或核定下料圖輸入瓜瓣實際面積。7,168.7 mm 保留作為端頭整體展開參考直徑，不當作中央圓頂直徑，也不直接計入重量。中央圓頂及瓜瓣尺寸未填齊時，只顯示已輸入部件的小計，不宣稱為完整端頭總重量。</div>
+</div>
+<div class="panel">
+<h2>浮頭下胚料計算結果</h2>
+<div class="hero"><div><strong id="floatTotalPieces">2 瓣</strong><br><span id="floatArrangement">1 個浮頭 × 每個 2 瓣</span></div><div><span>浮頭下胚重量</span><br><strong id="floatGrossMass">待輸入單瓣實際面積</strong></div></div>
+<div class="cards">
+<div class="metric"><small>共用內徑 ID</small><strong id="floatResultID">6000 mm</strong></div>
+<div class="metric"><small>成形內球面半徑 R</small><strong id="floatResultR">5427.00 mm</strong></div>
+<div class="metric"><small>轉角半徑 r</small><strong id="floatResultr">34.54 mm</strong></div>
+<div class="metric"><small>理論深度 H</small><strong id="floatResultH">50.00 mm</strong></div>
+<div class="metric"><small>每瓣底部弧長</small><strong id="floatArc">314.16 mm</strong></div>
+<div class="metric"><small>總下胚瓣數</small><strong id="floatPieceCount">2 瓣</strong></div>
+<div class="metric"><small>單瓣實際展開面積</small><strong id="floatPieceArea">待輸入</strong></div>
+<div class="metric"><small>單瓣重量</small><strong id="floatPieceMass">待輸入</strong></div>
+<div class="metric"><small>浮頭部件重量小計</small><strong id="floatSubtotal">待輸入</strong></div>
+<div class="metric"><small>加工／切割損耗重量</small><strong id="floatLoss">待輸入</strong></div>
+</div>
+<table>
+<tr><td>內側球面弧度半徑 R</td><td id="floatFormulaR">0.9045 × 共用 ID = 5427.00 mm</td></tr>
+<tr><td>轉角半徑</td><td id="floatFormular">0.1727 × ID = 1036.20 mm</td></tr>
+<tr><td>理論深度</td><td id="floatFormulaH">ID ÷ 4 = 1500.00 mm</td></tr>
+<tr><td>每瓣底部弧長（等分估算）</td><td id="floatFormulaArc">π × ID ÷ 2 = 9424.78 mm</td></tr>
+<tr><td>總下胚瓣數</td><td id="floatFormulaQty">2 瓣／個 × 1 個 = 2 瓣</td></tr>
+<tr><td>單瓣重量</td><td id="floatFormulaMass">實際展開面積 × 板厚 × 材料密度</td></tr>
+<tr><td>含損耗備料重量</td><td id="floatFormulaGross">待輸入單瓣實際展開面積</td></tr>
+</table>
+<div class="note">注意：R、r、H 與底部弧長為原題幾何公式計算值；底部弧長不等於完整瓜瓣輪廓長度。2 瓣圖形／分割僅作概念示意，不能直接作為製造切割模板。重量採單瓣實際展開面積 × 板厚 × 材料密度計算，與原本 2:1 橢圓封頭拆分重量分開列示。</div>
+</div>
+<div class="panel" id="overallSummary">
+<h2>整體下胚料計算總結果</h2>
+<div class="hero"><div><strong id="overallPieces">待計算</strong><br><span>胴身＋端頭＋浮頭下胚總片數</span></div><div><span>整體含損耗備料重量</span><br><strong id="overallGross">待資料齊全</strong></div></div>
+<div class="cards">
+<div class="metric"><small>整體下胚總面積</small><strong id="overallArea">待計算</strong></div>
+<div class="metric"><small>整體材料重量（未含損耗）</small><strong id="overallSubtotal">待計算</strong></div>
+<div class="metric"><small>整體加工／切割損耗</small><strong id="overallLoss">待計算</strong></div>
+<div class="metric"><small>胴身下胚重量</small><strong id="overallShell">待計算</strong></div>
+<div class="metric"><small>端頭拆分重量</small><strong id="overallHead">待計算</strong></div>
+<div class="metric"><small>浮頭下胚重量</small><strong id="overallFloat">待計算</strong></div>
+</div>
+<table>
+<tr><td>胴身下胚</td><td id="overallShellDetail">—</td></tr>
+<tr><td>端頭拆分下胚</td><td id="overallHeadDetail">—</td></tr>
+<tr><td>浮頭下胚</td><td id="overallFloatDetail">—</td></tr>
+<tr><td>整體材料重量小計</td><td id="overallFormulaSubtotal">—</td></tr>
+<tr><td>加工／切割損耗重量</td><td id="overallFormulaLoss">—</td></tr>
+<tr><td>含損耗總備料重量</td><td id="overallFormulaGross">—</td></tr>
+</table>
+<div class="note info" id="overallNote">總結果將整合胴身、端頭及浮頭三個部位；各部位資料齊全後才會顯示完整總備料重量。</div>
+</div>
+<div class="panel drawing">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">2D 胴身工程圖與端頭拆分下胚圖</h2><div class="tabs"><button id="elevation" class="active">胴身分節圖</button><button id="blank" class="secondary">單片胴身下胚圖</button><button id="headDrawing" class="secondary">端頭拆分下胚圖</button><button id="floatDrawing" class="secondary">浮頭下胚圖</button><button id="print" class="secondary">列印／存 PDF</button></div></div>
+<svg id="dwg" viewBox="0 0 1100 470" role="img" aria-label="胴身分節與單片下胚工程示意圖"></svg>
+</div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(n,d=1)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:d});
+function svgText(svg,x,y,str,size=15,color='#243d55',anchor='middle'){
+ const n=document.createElementNS('http://www.w3.org/2000/svg','text');
+ n.setAttribute('x',x);n.setAttribute('y',y);n.setAttribute('fill',color);
+ n.setAttribute('font-size',size);n.setAttribute('text-anchor',anchor);
+ n.setAttribute('font-family','Arial, Microsoft JhengHei, sans-serif');n.textContent=str;svg.appendChild(n);
+}
+function svgLine(svg,x1,y1,x2,y2,color='#1769aa',width=1.5,dash=''){
+ const n=document.createElementNS('http://www.w3.org/2000/svg','line');
+ Object.entries({x1,y1,x2,y2,stroke:color,'stroke-width':width,'stroke-dasharray':dash}).forEach(([k,v])=>n.setAttribute(k,v));
+ svg.appendChild(n);
+}
+function svgRect(svg,x,y,w,h,fill='#f2f6f9',stroke='#243d55',width=2){
+ const n=document.createElementNS('http://www.w3.org/2000/svg','rect');
+ Object.entries({x,y,width:w,height:h,fill,stroke,'stroke-width':width}).forEach(([k,v])=>n.setAttribute(k,v));
+ svg.appendChild(n);
+}
+function drawElevation(L,ID,t,courses,segments,courseLen,blankAxial,blankCirc){
+ const s=$('dwg');s.innerHTML='';
+ svgText(s,550,30,'胴身側視圖（軸向分節示意）',20);
+ const x=135,y=95,w=820,h=180,courseW=w/courses;
+ for(let i=0;i<courses;i++){
+   svgRect(s,x+i*courseW,y,courseW,h,i%2?'#edf3f7':'#f7fafc','#243d55',2);
+   svgText(s,x+(i+.5)*courseW,y+95,`第 ${i+1} 節`,17);
+   svgText(s,x+(i+.5)*courseW,y+122,`${fmt(courseLen)} mm`,14,'#1769aa');
+ }
+ svgLine(s,x,y-15,x+w,y-15,'#1769aa');
+ svgText(s,550,65,`總長 L = ${fmt(L)} mm；分為 ${courses} 節`,15,'#1769aa');
+ svgLine(s,x,y+h+35,x+w,y+h+35,'#1769aa');
+ svgText(s,550,y+h+58,`每節成品長度 = ${fmt(courseLen)} mm`,15,'#1769aa');
+ svgText(s,550,385,`每節圓周分 ${segments} 片；每片理論角度 = ${(360/segments).toFixed(1)}°`,17);
+ const cx=550,cy=435,r=42;
+ const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+ Object.entries({cx,cy,r,fill:'#f7fafc',stroke:'#243d55','stroke-width':2}).forEach(([k,v])=>c.setAttribute(k,v));s.appendChild(c);
+ for(let i=0;i<segments;i++){let a=(i*2*Math.PI/segments)-Math.PI/2;svgLine(s,cx,cy,cx+r*Math.cos(a),cy+r*Math.sin(a),'#1769aa',2)}
+ svgText(s,650,440,`${segments} 片拼成一圈`,14,'#1769aa','start');
+}
+function drawBlank(t,courseLen,theoryW,axial,circ,segments,courses){
+ const s=$('dwg');s.innerHTML='';
+ svgText(s,550,30,'單片胴身下胚料尺寸示意圖',20);
+ const x=220,y=100,w=660,h=250;
+ svgRect(s,x,y,w,h,'#f4f8fb','#243d55',2);
+ svgText(s,550,215,`單片下胚：${fmt(t)} × ${fmt(axial)} × ${fmt(circ)} mm`,19,'#1769aa');
+ svgText(s,550,250,`對應成品：${fmt(t)} × ${fmt(courseLen)} × ${fmt(theoryW)} mm`,16);
+ svgLine(s,x,y+h+35,x+w,y+h+35,'#1769aa');
+ svgText(s,550,y+h+58,`圓周展開方向：${fmt(circ)} mm（理論 ${fmt(theoryW)} + 預留量）`,15,'#1769aa');
+ svgLine(s,x-35,y,x-35,y+h,'#1769aa');
+ svgText(s,130,230,`軸向 ${fmt(axial)} mm`,14,'#1769aa');
+ svgText(s,550,435,`總需求：${courses} 節 × ${segments} 片／節 = ${courses*segments} 片`,17);
+}
+
+function drawHeadSplit(headID,headT,refD,crownD,crownQtyPerHead,petalQtyPerHead,petalArea,headQty,rho){
+  const s=$('dwg');s.innerHTML='';
+  svgText(s,550,28,'2:1 橢圓封頭｜拆分部件示意圖（非比例製造圖）',20);
+  const totalCrown=crownQtyPerHead*headQty;
+  const totalPetals=petalQtyPerHead*headQty;
+  // 左側：端頭正視組合示意，中央圓頂 + 外圍瓜瓣
+  svgText(s,285,66,'A. 端頭正視組合示意',16,'#1769aa');
+  const cx=285,cy=245,ri=64,ro=150;
+  const crown=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  Object.entries({cx,cy,r:ri,fill:'#dcecf7',stroke:'#243d55','stroke-width':2}).forEach(([k,v])=>crown.setAttribute(k,v));s.appendChild(crown);
+  const polar=(r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  for(let i=0;i<Math.max(1,petalQtyPerHead);i++){
+    const a0=(i*2*Math.PI/Math.max(1,petalQtyPerHead))-Math.PI/2;
+    const a1=((i+1)*2*Math.PI/Math.max(1,petalQtyPerHead))-Math.PI/2;
+    const p1=polar(ri,a0),p2=polar(ro,a0),p3=polar(ro,a1),p4=polar(ri,a1);
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const d=`M ${p1[0]} ${p1[1]} L ${p2[0]} ${p2[1]} A ${ro} ${ro} 0 0 1 ${p3[0]} ${p3[1]} L ${p4[0]} ${p4[1]} A ${ri} ${ri} 0 0 0 ${p1[0]} ${p1[1]} Z`;
+    Object.entries({d,fill:i%2?'#edf3f7':'#f7fafc',stroke:'#54748d','stroke-width':1.3}).forEach(([k,v])=>path.setAttribute(k,v));s.appendChild(path);
+  }
+  svgText(s,cx,cy-5,'中央圓頂',14);
+  svgText(s,cx,cy+16,`Ø${fmt(crownD)} mm`,13,'#1769aa');
+  svgLine(s,cx-ri,cy+ri+18,cx+ri,cy+ri+18,'#1769aa',1.2);
+  svgText(s,cx,cy+ri+38,`中央圓頂 ${crownQtyPerHead} 片／端頭`,12,'#1769aa');
+  svgText(s,cx,cy+ro+45,`周圍瓜瓣 ${petalQtyPerHead} 片／端頭`,13,'#1769aa');
+  svgText(s,cx,cy+ro+65,`共 ${totalPetals} 片（${headQty} 個端頭）`,12,'#1769aa');
+
+  // 右側：拆分下胚項目清單，面積與片數直接採用輸入值
+  svgLine(s,535,55,535,430,'#c8d7e3',1);
+  svgText(s,810,66,'B. 拆分下胚料明細',16,'#1769aa');
+  svgRect(s,590,92,440,105,'#f1f7fb','#8aa9bf',1.5);
+  svgText(s,810,119,'中央圓頂｜圓形下胚',15);
+  svgText(s,810,148,`Ø${fmt(crownD)} mm　×　${totalCrown} 片`,17,'#1769aa');
+  const crownArea=crownD>0?Math.PI/4*(crownD/1000)**2:0;
+  const crownMass=crownArea*(headT/1000)*rho;
+  svgText(s,810,176,`單片面積 ${fmt(crownArea,3)} m²；單片重量 ${fmt(crownMass,1)} kg`,12);
+
+  svgRect(s,590,215,440,125,'#f7fafc','#8aa9bf',1.5);
+  svgText(s,810,242,'周圍瓜瓣｜依 CAD 實際展開面積計算',15);
+  svgText(s,810,272,`每端頭 ${petalQtyPerHead} 片　｜　總數 ${totalPetals} 片`,15,'#1769aa');
+  svgText(s,810,300,`單片實際面積 ${fmt(petalArea,3)} m²`,14);
+  svgText(s,810,323,`單片重量 ${fmt(petalArea*(headT/1000)*rho,1)} kg`,12);
+
+  svgText(s,810,375,`端頭 ID ${fmt(headID)} mm　／　板厚 ${fmt(headT)} mm`,14);
+  svgText(s,810,400,`整體展開參考 Ø${fmt(refD)} mm（不直接計重）`,13,'#73551c');
+  svgText(s,550,458,'注意：瓜瓣實際輪廓與尺寸須依 CAD／核定展開圖；本圖僅表示拆分配置，不可作為切割模板。',12,'#73551c');
+}
+
+function drawFloatBlank(ID,floatT,floatQty,floatPetalQty,floatPetalArea,rho,floatR,floatRk,floatH,lossRate){
+  const s=$('dwg');s.innerHTML='';
+  const totalPieces=floatQty*floatPetalQty;
+  const arc=Math.PI*ID/floatPetalQty;
+  const pieceMass=floatPetalArea*(floatT/1000)*rho;
+  const subtotal=pieceMass*totalPieces;
+  const loss=subtotal*lossRate/100;
+  const gross=subtotal+loss;
+  svgText(s,550,28,'浮頭下胚圖｜分瓣配置與單瓣下胚資料',20);
+  svgText(s,270,68,'A. 浮頭正視分瓣配置示意',16,'#1769aa');
+  const cx=270,cy=250,r=145;
+  const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  Object.entries({cx,cy,r,fill:'#f7fafc',stroke:'#243d55','stroke-width':2}).forEach(([k,v])=>circle.setAttribute(k,v));s.appendChild(circle);
+  for(let i=0;i<floatPetalQty;i++){
+    const a=-Math.PI/2+i*2*Math.PI/floatPetalQty;
+    const x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+    if(floatPetalQty>1)svgLine(s,cx,cy,x,y,'#1769aa',1.8);
+    const mid=a+Math.PI/floatPetalQty;
+    const labelR=floatPetalQty===1?0:r*.58;
+    svgText(s,cx+labelR*Math.cos(mid),cy+labelR*Math.sin(mid),`第 ${i+1} 瓣`,13,'#1769aa');
+  }
+  svgText(s,cx,cy+ r+28,`每個浮頭 ${floatPetalQty} 瓣｜浮頭數量 ${floatQty} 個`,13,'#1769aa');
+  svgText(s,cx,cy+r+48,`總下胚瓣數 ${totalPieces} 瓣`,13);
+  svgLine(s,520,55,520,435,'#c8d7e3',1);
+  svgText(s,810,68,'B. 單瓣下胚資料',16,'#1769aa');
+  svgRect(s,570,92,470,115,'#f1f7fb','#8aa9bf',1.5);
+  svgText(s,805,120,'單瓣實際展開輪廓',16);
+  svgText(s,805,151,`實際面積：${fmt(floatPetalArea,4)} m²／瓣`,16,'#1769aa');
+  svgText(s,805,181,`板厚：${fmt(floatT,1)} mm　｜　單瓣重量：${fmt(pieceMass,2)} kg`,13);
+  svgRect(s,570,225,470,125,'#f7fafc','#8aa9bf',1.5);
+  svgText(s,805,253,'幾何參數（依目前輸入值）',15);
+  svgText(s,805,282,`共用內徑 ID：${fmt(ID,2)} mm　｜　球面半徑 R：${fmt(floatR,2)} mm`,13,'#1769aa');
+  svgText(s,805,309,`轉角半徑 r：${fmt(floatRk,2)} mm　｜　理論深度 H：${fmt(floatH,2)} mm`,13);
+  svgText(s,805,335,`每瓣底部弧長估算：${fmt(arc,2)} mm`,13);
+  svgRect(s,570,368,470,62,'#fff8e8','#e4cf9f',1.2);
+  svgText(s,805,391,`總重量：${fmt(subtotal,2)} kg　｜　損耗：${fmt(loss,2)} kg`,13);
+  svgText(s,805,415,`含損耗備料重量：${fmt(gross,2)} kg`,14,'#73551c');
+  svgText(s,550,460,'注意：正視圖僅表示分瓣數量與配置；本圖不推算或取代 CAD 核定的單瓣展開輪廓及切割模板。',12,'#73551c');
+}
+
+function build(){
+ const L=+$('L').value,ID=+$('ID').value,t=+$('t').value,rho=+$('rho').value;
+ const headID=+$('headID').value,headT=+$('headT').value,headBlankD=+$('headBlankD').value,headQty=+$('headQty').value;
+ const crownBlankD=+$('crownBlankD').value,crownQtyPerHead=+$('crownQtyPerHead').value;
+ const petalQtyPerHead=+$('petalQtyPerHead').value,petalArea=+$('petalArea').value;
+ const headType=$('headType').value;
+ const courses=+$('courses').value,segments=+$('segments').value;
+ const theoryW=+$('pieceTheoryW').value,circAllowance=+$('circAllowance').value,axialAllowance=+$('axialAllowance').value,lossRate=+$('lossRate').value;
+ if(!(L>0&&ID>0&&t>0&&rho>0&&headID>0&&headT>0&&headBlankD>=0&&headQty>0&&Number.isInteger(headQty)&&crownBlankD>=0&&crownQtyPerHead>0&&Number.isInteger(crownQtyPerHead)&&petalQtyPerHead>=0&&(petalQtyPerHead===0||Number.isInteger(petalQtyPerHead))&&petalArea>=0&&courses>0&&segments>0&&Number.isInteger(courses)&&Number.isInteger(segments)&&theoryW>0&&circAllowance>=0&&axialAllowance>=0&&lossRate>=0&&lossRate<=100)){
+   alert('請確認尺寸、分節數、分片數與密度輸入正確；分節數及分片數必須為正整數。');return;
+ }
+ const courseLen=L/courses;
+ const axialBlank=courseLen+axialAllowance;
+ const circBlank=theoryW+circAllowance;
+ const pieceCount=courses*segments;
+ const pieceArea=axialBlank*circBlank/1e6;
+ const pieceMass=(axialBlank/1000)*(circBlank/1000)*(t/1000)*rho;
+ const totalMass=pieceMass*pieceCount;
+  const lossMass=totalMass*lossRate/100;
+  const grossMass=totalMass+lossMass;
+ const OD=ID+2*t,Dm=ID+t,fullCirc=Math.PI*Dm,sectorArc=fullCirc/segments;
+ $('totalPieces').textContent=`${pieceCount} 片`;
+ $('pieceArrangement').textContent=`${courses} 節 × 每節 ${segments} 片（每片 ${(360/segments).toFixed(1)}°）`;
+ $('pieceSizeHero').textContent=`${fmt(t)} × ${fmt(axialBlank)} × ${fmt(circBlank)} mm`;
+ $('courseLength').textContent=`${fmt(courseLen)} mm`;
+ $('theorySpec').textContent=`${fmt(t)} × ${fmt(courseLen)} × ${fmt(theoryW)} mm`;
+ $('blankSpec').textContent=`${fmt(t)} × ${fmt(axialBlank)} × ${fmt(circBlank)} mm`;
+ $('pieceArea').textContent=`${fmt(pieceArea,3)} m²`;
+ $('pieceMass').textContent=`${fmt(pieceMass,1)} kg`;
+ $('totalMass').textContent=`${fmt(totalMass,1)} kg`;
+  $('lossMass').textContent=`${fmt(lossMass,1)} kg`;
+  $('grossMass').textContent=`${fmt(grossMass,1)} kg`;
+ $('formulaCourse').textContent=`${fmt(L)} ÷ ${courses} = ${fmt(courseLen)} mm`;
+ $('formulaAxial').textContent=`${fmt(courseLen)} + ${fmt(axialAllowance)} = ${fmt(axialBlank)} mm`;
+ $('formulaCirc').textContent=`${fmt(theoryW)} + ${fmt(circAllowance)} = ${fmt(circBlank)} mm`;
+ $('formulaCount').textContent=`${courses} 節 × ${segments} 片／節 = ${pieceCount} 片`;
+ $('formulaPieceMass').textContent=`${fmt(axialBlank/1000,3)} × ${fmt(circBlank/1000,4)} × ${fmt(t/1000,3)} × ${fmt(rho,0)} = ${fmt(pieceMass,1)} kg`;
+ $('formulaTotalMass').textContent=`${fmt(pieceMass,1)} × ${pieceCount} = ${fmt(totalMass,1)} kg`;
+  $('formulaLossMass').textContent=`${fmt(totalMass,1)} × ${fmt(lossRate,1)}% = ${fmt(lossMass,1)} kg`;
+  $('formulaGrossMass').textContent=`${fmt(totalMass,1)} + ${fmt(lossMass,1)} = ${fmt(grossMass,1)} kg`;
+ const expectedSectorArc=Math.PI*(ID+t)/segments;
+ const diff=theoryW-expectedSectorArc;
+ const warning=`幾何核對：依 ID=${fmt(ID)} mm、t=${fmt(t)} mm，並以中性層直徑 ID+t 計算，每片 ${fmt(360/segments,1)}° 理論弧長為 π × (ID+t) ÷ ${segments} = ${fmt(expectedSectorArc,1)} mm；與指定 ${fmt(theoryW,1)} mm 相差 ${fmt(diff,1)} mm／片。本計算器依你提供的工廠尺寸 ${fmt(theoryW,1)} mm 計算，不自行改值。`;
+ $('geometryCheck').textContent=warning;
+
+ // 端頭拆分：中央圓頂 + 周圍瓜瓣片，各自計算後再加總。
+ $('headTypeResult').textContent=headType;
+ $('headTotalQty').textContent=`${headQty} 個端頭`;
+ $('headCountResult').textContent=`${headQty} 個`;
+ $('headFormulaType').textContent=headType;
+ $('headFormulaCommon').textContent=`ID ${fmt(headID)} mm／t ${fmt(headT)} mm`;
+ $('headFormulaRefD').textContent=`${fmt(headBlankD)} mm（參考值，不直接計重）`;
+
+ let crownTotalQty=0,crownTotalMass=0,crownPieceMass=0,crownPieceArea=0;
+ if(crownBlankD>0){
+   crownTotalQty=crownQtyPerHead*headQty;
+   crownPieceArea=Math.PI/4*(crownBlankD/1000)**2;
+   crownPieceMass=crownPieceArea*(headT/1000)*rho;
+   crownTotalMass=crownPieceMass*crownTotalQty;
+   $('crownSpec').textContent=`${fmt(headT)} × Ø${fmt(crownBlankD)} mm`;
+   $('crownTotalQty').textContent=`${crownTotalQty} 片`;
+   $('crownPieceArea').textContent=`${fmt(crownPieceArea,3)} m²`;
+   $('crownPieceMass').textContent=`${fmt(crownPieceMass,1)} kg`;
+   $('crownTotalMass').textContent=`${fmt(crownTotalMass,1)} kg`;
+   $('crownFormulaD').textContent=`Ø${fmt(crownBlankD)} mm；面積 = π ÷ 4 × D² = ${fmt(crownPieceArea,3)} m²`;
+   $('crownFormulaQty').textContent=`${crownQtyPerHead} × ${headQty} = ${crownTotalQty} 片`;
+   $('crownFormulaMass').textContent=`${fmt(crownPieceArea,3)} × ${fmt(headT/1000,3)} × ${fmt(rho,0)} × ${crownTotalQty} = ${fmt(crownTotalMass,1)} kg`;
+ }else{
+   $('crownSpec').textContent='待輸入圓板直徑';
+   $('crownTotalQty').textContent='待輸入';
+   $('crownPieceArea').textContent='待輸入';
+   $('crownPieceMass').textContent='待輸入';
+   $('crownTotalMass').textContent='待輸入';
+   $('crownFormulaD').textContent='請輸入中央圓頂下胚圓板直徑';
+   $('crownFormulaQty').textContent=`${crownQtyPerHead} 片／端頭 × ${headQty} 個端頭`;
+   $('crownFormulaMass').textContent='中央圓頂總面積 × 板厚 × 材料密度';
+ }
+
+ let petalTotalQty=0,petalTotalArea=0,petalPieceMass=0,petalTotalMass=0;
+ if(petalQtyPerHead>0 && petalArea>0){
+   petalTotalQty=petalQtyPerHead*headQty;
+   petalTotalArea=petalArea*petalTotalQty;
+   petalPieceMass=petalArea*(headT/1000)*rho;
+   petalTotalMass=petalPieceMass*petalTotalQty;
+   $('petalPerHead').textContent=`${petalQtyPerHead} 片`;
+   $('petalTotalQty').textContent=`${petalTotalQty} 片`;
+   $('petalPieceArea').textContent=`${fmt(petalArea,3)} m²`;
+   $('petalPieceMass').textContent=`${fmt(petalPieceMass,1)} kg`;
+   $('petalTotalMass').textContent=`${fmt(petalTotalMass,1)} kg`;
+   $('petalTotalArea').textContent=`${fmt(petalTotalArea,3)} m²`;
+   $('petalFormulaQty').textContent=`${petalQtyPerHead} × ${headQty} = ${petalTotalQty} 片`;
+   $('petalFormulaArea').textContent=`${fmt(petalArea,3)} × ${petalTotalQty} = ${fmt(petalTotalArea,3)} m²`;
+   $('petalFormulaMass').textContent=`${fmt(petalTotalArea,3)} × ${fmt(headT/1000,3)} × ${fmt(rho,0)} = ${fmt(petalTotalMass,1)} kg`;
+ }else{
+   $('petalPerHead').textContent=petalQtyPerHead>0?`${petalQtyPerHead} 片／端頭`:'待輸入';
+   $('petalTotalQty').textContent='待輸入';
+   $('petalPieceArea').textContent='待輸入';
+   $('petalPieceMass').textContent='待輸入';
+   $('petalTotalMass').textContent='待輸入';
+   $('petalTotalArea').textContent='待輸入';
+   $('petalFormulaQty').textContent=petalQtyPerHead>0?`${petalQtyPerHead} × ${headQty} = ${petalQtyPerHead*headQty} 片（待面積）`:'請輸入每個端頭瓜瓣片數';
+   $('petalFormulaArea').textContent='請輸入單片瓜瓣實際下胚面積';
+   $('petalFormulaMass').textContent='瓜瓣總面積 × 板厚 × 材料密度';
+ }
+
+ const knownSubtotal=crownTotalMass+petalTotalMass;
+ const crownReady=crownBlankD>0;
+ const petalsReady=petalQtyPerHead>0&&petalArea>0;
+ const allPartsReady=crownReady&&petalsReady;
+ const knownPieces=crownTotalQty+petalTotalQty;
+ $('headKnownSubtotal').textContent=knownSubtotal>0?`${fmt(knownSubtotal,1)} kg`:'待輸入拆分尺寸';
+ $('headSubtotalMass').textContent=knownSubtotal>0?`${fmt(knownSubtotal,1)} kg`:'待輸入';
+ if(allPartsReady){
+   const headLossMass=knownSubtotal*lossRate/100;
+   const headGrossMass=knownSubtotal+headLossMass;
+   $('headTotalQty').textContent=`${knownPieces} 片／共 ${headQty} 個端頭`;
+   $('headLossMass').textContent=`${fmt(headLossMass,1)} kg`;
+   $('headGrossMass').textContent=`${fmt(headGrossMass,1)} kg`;
+   $('headFormulaSubtotal').textContent=`中央圓頂 ${fmt(crownTotalMass,1)} + 周圍瓜瓣 ${fmt(petalTotalMass,1)} = ${fmt(knownSubtotal,1)} kg`;
+   $('headFormulaLoss').textContent=`${fmt(knownSubtotal,1)} × ${fmt(lossRate,1)}% = ${fmt(headLossMass,1)} kg`;
+   $('headFormulaGross').textContent=`${fmt(knownSubtotal,1)} + ${fmt(headLossMass,1)} = ${fmt(headGrossMass,1)} kg`;
+ }else{
+   $('headLossMass').textContent='待資料齊全';
+   $('headGrossMass').textContent='待資料齊全';
+   $('headFormulaSubtotal').textContent=`已輸入項目小計：${fmt(knownSubtotal,1)} kg；尚有拆分尺寸未輸入`;
+   $('headFormulaLoss').textContent='資料齊全後計算';
+   $('headFormulaGross').textContent='資料齊全後計算';
+ }
+  // 胴身內徑 ID 與端頭內徑為共用 ID；R 直接顯示於原本的 floatID 輸入欄。
+  const floatT=+$('floatT').value,floatQty=+$('floatQty').value;
+  const floatPetalQty=+$('floatPetalQty').value,floatPetalArea=+$('floatPetalArea').value;
+  const floatR=0.9045*ID,floatRk=0.1727*ID,floatH=ID/4;
+  $('floatID').value = Number.isFinite(floatR) && ID > 0 ? floatR.toFixed(2) : '';
+  if(floatR>0&&floatT>0&&floatQty>0&&Number.isInteger(floatQty)&&floatPetalQty>0&&Number.isInteger(floatPetalQty)&&floatPetalArea>=0){
+    const floatArc=Math.PI*ID/floatPetalQty,floatPieces=floatQty*floatPetalQty;
+    $('floatTotalPieces').textContent=`${floatPieces} 瓣`;
+    $('floatArrangement').textContent=`${floatQty} 個浮頭 × 每個 ${floatPetalQty} 瓣`;
+    $('floatResultID').textContent=`${fmt(ID,2)} mm`;$('floatResultR').textContent=`${fmt(floatR,2)} mm`;$('floatResultr').textContent=`${fmt(floatRk,2)} mm`;$('floatResultH').textContent=`${fmt(floatH,2)} mm`;$('floatArc').textContent=`${fmt(floatArc,2)} mm`;$('floatPieceCount').textContent=`${floatPieces} 瓣`;
+    $('floatFormulaR').textContent=`ID × 0.9045 = ${fmt(ID,2)} × 0.9045 = ${fmt(floatR,2)} mm`;$('floatFormular').textContent=`0.1727 × ${fmt(ID,2)} = ${fmt(floatRk,2)} mm`;$('floatFormulaH').textContent=`${fmt(ID,2)} ÷ 4 = ${fmt(floatH,2)} mm`;$('floatFormulaArc').textContent=`π × ${fmt(ID,2)} ÷ ${floatPetalQty} = ${fmt(floatArc,2)} mm`;$('floatFormulaQty').textContent=`${floatPetalQty} 瓣／個 × ${floatQty} 個 = ${floatPieces} 瓣`;
+    if(floatPetalArea>0){
+      const floatPieceMass=floatPetalArea*(floatT/1000)*rho,floatSubtotal=floatPieceMass*floatPieces,floatLoss=floatSubtotal*lossRate/100,floatGross=floatSubtotal+floatLoss;
+      $('floatPieceArea').textContent=`${fmt(floatPetalArea,3)} m²`;$('floatPieceMass').textContent=`${fmt(floatPieceMass,2)} kg`;$('floatSubtotal').textContent=`${fmt(floatSubtotal,2)} kg`;$('floatLoss').textContent=`${fmt(floatLoss,2)} kg`;$('floatGrossMass').textContent=`${fmt(floatGross,2)} kg`;$('floatFormulaMass').textContent=`${fmt(floatPetalArea,3)} × ${fmt(floatT/1000,3)} × ${fmt(rho,0)} = ${fmt(floatPieceMass,2)} kg／瓣`;$('floatFormulaGross').textContent=`${fmt(floatSubtotal,2)} + ${fmt(floatLoss,2)} = ${fmt(floatGross,2)} kg（損耗 ${fmt(lossRate,1)}%）`;
+    }else{
+      $('floatPieceArea').textContent='待輸入實際展開面積';$('floatPieceMass').textContent='待輸入';$('floatSubtotal').textContent='待輸入';$('floatLoss').textContent='待輸入';$('floatGrossMass').textContent='待輸入單瓣實際面積';$('floatFormulaMass').textContent='實際展開面積 × 板厚 × 材料密度';$('floatFormulaGross').textContent='輸入單瓣實際展開面積後計算';
+    }
+  }else{alert('請確認共用內徑 ID、浮頭板厚、數量、分瓣數及單瓣面積輸入正確。');return;}
+  // 整體下胚料總結果：整合胴身、端頭拆分及浮頭三個部位。
+  const shellAreaTotal=pieceArea*pieceCount;
+  const headAreaTotal=(crownPieceArea*crownTotalQty)+petalTotalArea;
+  const floatPiecesTotal=floatQty*floatPetalQty;
+  const floatAreaTotal=floatPetalArea*floatPiecesTotal;
+  const floatSubtotalTotal=floatPetalArea>0?floatPetalArea*(floatT/1000)*rho*floatPiecesTotal:0;
+  const shellLossTotal=lossMass;
+  const headLossTotal=allPartsReady?knownSubtotal*lossRate/100:0;
+  const floatLossTotal=floatPetalArea>0?floatSubtotalTotal*lossRate/100:0;
+  const overallAreaTotal=shellAreaTotal+headAreaTotal+floatAreaTotal;
+  const overallSubtotalTotal=totalMass+knownSubtotal+floatSubtotalTotal;
+  const overallLossTotal=shellLossTotal+headLossTotal+floatLossTotal;
+  const overallReady=allPartsReady&&floatPetalArea>0;
+  const overallPieceTotal=pieceCount+knownPieces+floatPiecesTotal;
+  $('overallPieces').textContent=`${fmt(overallPieceTotal,0)} 片／瓣`;
+  $('overallArea').textContent=`${fmt(overallAreaTotal,3)} m²`;
+  $('overallSubtotal').textContent=`${fmt(overallSubtotalTotal,2)} kg`;
+  $('overallLoss').textContent=overallReady?`${fmt(overallLossTotal,2)} kg`:'待資料齊全';
+  $('overallShell').textContent=`${fmt(totalMass,2)} kg`;
+  $('overallHead').textContent=allPartsReady?`${fmt(knownSubtotal,2)} kg`:'資料未齊全';
+  $('overallFloat').textContent=floatPetalArea>0?`${fmt(floatSubtotalTotal,2)} kg`:'資料未齊全';
+  $('overallGross').textContent=overallReady?`${fmt(overallSubtotalTotal+overallLossTotal,2)} kg`:'待資料齊全';
+  $('overallShellDetail').textContent=`${fmt(pieceCount,0)} 片｜面積 ${fmt(shellAreaTotal,3)} m²｜重量 ${fmt(totalMass,2)} kg｜損耗 ${fmt(shellLossTotal,2)} kg`;
+  $('overallHeadDetail').textContent=allPartsReady?`${fmt(knownPieces,0)} 片｜面積 ${fmt(headAreaTotal,3)} m²｜重量 ${fmt(knownSubtotal,2)} kg｜損耗 ${fmt(headLossTotal,2)} kg`:`${fmt(knownPieces,0)} 片｜已知面積 ${fmt(headAreaTotal,3)} m²｜已知重量 ${fmt(knownSubtotal,2)} kg｜尚缺拆分資料`;
+  $('overallFloatDetail').textContent=floatPetalArea>0?`${fmt(floatPiecesTotal,0)} 瓣｜面積 ${fmt(floatAreaTotal,3)} m²｜重量 ${fmt(floatSubtotalTotal,2)} kg｜損耗 ${fmt(floatLossTotal,2)} kg`:`${fmt(floatPiecesTotal,0)} 瓣｜尚缺單瓣實際展開面積`;
+  $('overallFormulaSubtotal').textContent=`胴身 ${fmt(totalMass,2)} + 端頭 ${fmt(knownSubtotal,2)} + 浮頭 ${fmt(floatSubtotalTotal,2)} = ${fmt(overallSubtotalTotal,2)} kg`;
+  $('overallFormulaLoss').textContent=overallReady?`${fmt(overallSubtotalTotal,2)} × ${fmt(lossRate,1)}% = ${fmt(overallLossTotal,2)} kg`:`各部位損耗合計暫計 ${fmt(overallLossTotal,2)} kg；資料齊全後確認`;
+  $('overallFormulaGross').textContent=overallReady?`${fmt(overallSubtotalTotal,2)} + ${fmt(overallLossTotal,2)} = ${fmt(overallSubtotalTotal+overallLossTotal,2)} kg`:'端頭或浮頭資料未齊全，暫不提供完整總備料重量';
+  $('overallNote').textContent=overallReady?'三個部位資料均已輸入。總面積為各部位實際下胚面積加總；總備料重量依各部位板厚、材料密度及損耗率分別計算後加總。':`目前顯示已輸入部位的面積及重量小計；${!allPartsReady?'端頭拆分尺寸尚未齊全。':''}${!(floatPetalArea>0)?'浮頭單瓣實際展開面積尚未輸入。':''}完整含損耗總備料重量待資料齊全後顯示。`;
+
+  if($('floatDrawing').dataset.active==='1')drawFloatBlank(ID,floatT,floatQty,floatPetalQty,floatPetalArea,rho,floatR,floatRk,floatH,lossRate);
+  else if($('headDrawing').dataset.active==='1')drawHeadSplit(headID,headT,headBlankD,crownBlankD,crownQtyPerHead,petalQtyPerHead,petalArea,headQty,rho);
+  else if($('blank').dataset.active==='1')drawBlank(t,courseLen,theoryW,axialBlank,circBlank,segments,courses);
+  else drawElevation(L,ID,t,courses,segments,courseLen,axialBlank,circBlank);
+}
+$('update').onclick=build;
+$('reset').onclick=()=>{
+ $('L').value=12000;$('ID').value=6000;$('t').value=30;$('rho').value=7850;$('headID').value=6000;$('headT').value=30;
+ $('headType').value='2:1 橢圓封頭';$('headBlankD').value=7168.7;$('headQty').value=2;$('crownBlankD').value=2650;$('crownQtyPerHead').value=1;$('petalQtyPerHead').value=12;$('petalArea').value=2.206;$('floatID').value=(+$('ID').value*0.9045).toFixed(2);$('floatT').value=30;$('floatQty').value=1;$('floatPetalQty').value=1;$('floatPetalArea').value=5.5154;
+ $('courses').value=6;$('segments').value=3;$('pieceTheoryW').value=6427.4;
+ $('circAllowance').value=50;$('axialAllowance').value=20;$('lossRate').value=5;build();
+};
+$('elevation').onclick=()=>{['blank','headDrawing','floatDrawing'].forEach(id=>$(id).dataset.active='0');$('elevation').className='active';['blank','headDrawing','floatDrawing'].forEach(id=>$(id).className='secondary');build()};
+$('blank').onclick=()=>{['headDrawing','floatDrawing'].forEach(id=>$(id).dataset.active='0');$('blank').dataset.active='1';$('blank').className='active';['elevation','headDrawing','floatDrawing'].forEach(id=>$(id).className='secondary');build()};
+$('headDrawing').onclick=()=>{['blank','floatDrawing'].forEach(id=>$(id).dataset.active='0');$('headDrawing').dataset.active='1';$('headDrawing').className='active';['elevation','blank','floatDrawing'].forEach(id=>$(id).className='secondary');build()};
+$('floatDrawing').onclick=()=>{['blank','headDrawing'].forEach(id=>$(id).dataset.active='0');$('floatDrawing').dataset.active='1';$('floatDrawing').className='active';['elevation','blank','headDrawing'].forEach(id=>$(id).className='secondary');build()};
+$('print').onclick=()=>window.print();
+
+// 胴身與端頭共用內徑、板厚；任一側輸入即同步至另一側。
+function syncSharedDimension(sourceId, targetId){
+  const source=$(sourceId), target=$(targetId);
+  source.addEventListener('input',()=>{
+    target.value=source.value;
+    // 浮頭成形內球面半徑即共用 ID × 0.9045。
+    const sharedID = +$('ID').value;
+    $('floatID').value = Number.isFinite(sharedID) && sharedID > 0
+      ? (sharedID * 0.9045).toFixed(2) : '';
+    // 暫時空白或輸入中的無效值不觸發計算驗證。
+    if (+$('ID').value>0 && +$('t').value>0) build();
+  });
+}
+syncSharedDimension('ID','headID');
+syncSharedDimension('headID','ID');
+syncSharedDimension('t','headT');
+syncSharedDimension('headT','t');
+$('headBlankD').addEventListener('input',build);
+$('headQty').addEventListener('input',build);
+$('crownBlankD').addEventListener('input',build);
+$('crownQtyPerHead').addEventListener('input',build);
+$('petalQtyPerHead').addEventListener('input',build);
+$('petalArea').addEventListener('input',build);
+$('headType').addEventListener('change',build);
+['floatT','floatQty','floatPetalQty','floatPetalArea'].forEach(id=>$(id).addEventListener('input',build));
+build();
+</script>
+</body></html>
